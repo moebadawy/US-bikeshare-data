@@ -1,0 +1,349 @@
+Tip: Welcome to the Investigate a Dataset project! You will find tips in quoted sections like this to help organize your approach to your investigation. Once you complete this project, remove these Tip sections from your report before submission. First things first, you might want to double-click this Markdown cell and change the title so that it reflects your dataset and investigation.
+
+Project: Investigate a Dataset - [TMDB Movies]
+Table of Contents
+Introduction
+Data Wrangling
+Exploratory Data Analysis
+Conclusions
+
+Introduction
+Dataset Description
+This dataset discusses the TMDB movies from 1960 to 2015, where I am going to analyze these data from different angles through introducing a new column called 'profit' that will help analyze which movies got the highest profit among the 10,866 movies. Also, I will inspect which genres were the most famous among the years through the usage of the explode function to get a real grasp of each genre alone since genres are grouped together by a dilimeter.
+
+Question(s) for Analysis
+Questions used for the analysis: 1) What are the hightest movies in terms of profit? 2) Which Genre generated the highest profit? 3) Which movies got the highest popularity among the top 10 grossing movies?
+
+# Use this cell to set up import statements for all of the packages that you
+#   plan to use.
+import pandas as pd
+import numpy as np
+%matplotlib inline
+import matplotlib.pyplot as plt
+# Remember to include a 'magic word' so that your visualizations are plotted
+#   inline with the notebook. See this page for more:
+#   http://ipython.readthedocs.io/en/stable/interactive/magics.html
+# Upgrade pandas to use dataframe.explode() function. 
+!pip3 install --upgrade pandas==0.25.0
+Requirement already up-to-date: pandas==0.25.0 in /opt/conda/lib/python3.6/site-packages (0.25.0)
+Requirement already satisfied, skipping upgrade: numpy>=1.13.3 in /opt/conda/lib/python3.6/site-packages (from pandas==0.25.0) (1.19.5)
+Requirement already satisfied, skipping upgrade: pytz>=2017.2 in /opt/conda/lib/python3.6/site-packages (from pandas==0.25.0) (2017.3)
+Requirement already satisfied, skipping upgrade: python-dateutil>=2.6.1 in /opt/conda/lib/python3.6/site-packages (from pandas==0.25.0) (2.6.1)
+Requirement already satisfied, skipping upgrade: six>=1.5 in /opt/conda/lib/python3.6/site-packages (from python-dateutil>=2.6.1->pandas==0.25.0) (1.11.0)
+pd.__version__
+'0.25.0'
+
+Data Wrangling
+Tip: In this section of the report, you will load in the data, check for cleanliness, and then trim and clean your dataset for analysis. Make sure that you document your data cleaning steps in mark-down cells precisely and justify your cleaning decisions.
+
+General Properties
+Tip: You should not perform too many operations in each cell. Create cells freely to explore your data. One option that you can take with this project is to do a lot of explorations in an initial notebook. These don't have to be organized, but make sure you use enough comments to understand the purpose of each code cell. Then, after you're done with your analysis, create a duplicate notebook where you will trim the excess and organize your steps so that you have a flowing, cohesive report.
+
+# Load your data and print out a few lines. Perform operations to inspect data
+#   types and look for instances of missing or possibly errant data.
+df = pd.read_csv('Database_TMDb_movie_data/tmdb-movies.csv')
+df.head()
+id	imdb_id	popularity	budget	revenue	original_title	cast	homepage	director	tagline	...	overview	runtime	genres	production_companies	release_date	vote_count	vote_average	release_year	budget_adj	revenue_adj
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	http://www.jurassicworld.com/	Colin Trevorrow	The park is open.	...	Twenty-two years after the events of Jurassic ...	124	Action|Adventure|Science Fiction|Thriller	Universal Studios|Amblin Entertainment|Legenda...	6/9/15	5562	6.5	2015	1.379999e+08	1.392446e+09
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	http://www.madmaxmovie.com/	George Miller	What a Lovely Day.	...	An apocalyptic story set in the furthest reach...	120	Action|Adventure|Science Fiction|Thriller	Village Roadshow Pictures|Kennedy Miller Produ...	5/13/15	6185	7.1	2015	1.379999e+08	3.481613e+08
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	http://www.thedivergentseries.movie/#insurgent	Robert Schwentke	One Choice Can Destroy You	...	Beatrice Prior must confront her inner demons ...	119	Adventure|Science Fiction|Thriller	Summit Entertainment|Mandeville Films|Red Wago...	3/18/15	2480	6.3	2015	1.012000e+08	2.716190e+08
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	http://www.starwars.com/films/star-wars-episod...	J.J. Abrams	Every generation has a story.	...	Thirty years after defeating the Galactic Empi...	136	Action|Adventure|Science Fiction|Fantasy	Lucasfilm|Truenorth Productions|Bad Robot	12/15/15	5292	7.5	2015	1.839999e+08	1.902723e+09
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	http://www.furious7.com/	James Wan	Vengeance Hits Home	...	Deckard Shaw seeks revenge against Dominic Tor...	137	Action|Crime|Thriller	Universal Pictures|Original Film|Media Rights ...	4/1/15	2947	7.3	2015	1.747999e+08	1.385749e+09
+5 rows × 21 columns
+
+# Showing the info to know which columns have null values 
+df.info()
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10866 entries, 0 to 10865
+Data columns (total 21 columns):
+id                      10866 non-null int64
+imdb_id                 10856 non-null object
+popularity              10866 non-null float64
+budget                  10866 non-null int64
+revenue                 10866 non-null int64
+original_title          10866 non-null object
+cast                    10790 non-null object
+homepage                2936 non-null object
+director                10822 non-null object
+tagline                 8042 non-null object
+keywords                9373 non-null object
+overview                10862 non-null object
+runtime                 10866 non-null int64
+genres                  10843 non-null object
+production_companies    9836 non-null object
+release_date            10866 non-null object
+vote_count              10866 non-null int64
+vote_average            10866 non-null float64
+release_year            10866 non-null int64
+budget_adj              10866 non-null float64
+revenue_adj             10866 non-null float64
+dtypes: float64(4), int64(6), object(11)
+memory usage: 1.7+ MB
+df.shape
+(10866, 21)
+In this phase, I have a general idea about the data regarding its dimensions, the null and non-null values and see which parts I need to apply data cleaning to
+
+Data Cleaning
+In this stage, data cleaning happens in order to ease the analysis process through several phases. First, drop the unneeded columns, then dropping the duplicates and the empty cells. Then the profit column is introduced to further enhance the analysis, where it's basically the revenue subtracted from the budget. Lastly, the genre column is further investigated through splitting the different genres for each movie.
+
+# After discussing the structure of the data and any problems that need to be
+#   cleaned, perform those cleaning steps in the second part of this section.
+#Dropping the columns that wouldn't affect my analysis
+df.drop(columns=['homepage','tagline','overview','runtime','release_date','keywords'],inplace = True)
+df.info()
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 10866 entries, 0 to 10865
+Data columns (total 15 columns):
+id                      10866 non-null int64
+imdb_id                 10856 non-null object
+popularity              10866 non-null float64
+budget                  10866 non-null int64
+revenue                 10866 non-null int64
+original_title          10866 non-null object
+cast                    10790 non-null object
+director                10822 non-null object
+genres                  10843 non-null object
+production_companies    9836 non-null object
+vote_count              10866 non-null int64
+vote_average            10866 non-null float64
+release_year            10866 non-null int64
+budget_adj              10866 non-null float64
+revenue_adj             10866 non-null float64
+dtypes: float64(4), int64(5), object(6)
+memory usage: 1.2+ MB
+df.drop_duplicates(inplace=True)
+df.dropna(inplace=True)
+df.shape
+(9770, 15)
+df.info()
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 9770 entries, 0 to 10865
+Data columns (total 15 columns):
+id                      9770 non-null int64
+imdb_id                 9770 non-null object
+popularity              9770 non-null float64
+budget                  9770 non-null int64
+revenue                 9770 non-null int64
+original_title          9770 non-null object
+cast                    9770 non-null object
+director                9770 non-null object
+genres                  9770 non-null object
+production_companies    9770 non-null object
+vote_count              9770 non-null int64
+vote_average            9770 non-null float64
+release_year            9770 non-null int64
+budget_adj              9770 non-null float64
+revenue_adj             9770 non-null float64
+dtypes: float64(4), int64(5), object(6)
+memory usage: 1.2+ MB
+df['profit']=df['revenue'] - df['budget']
+df.head()
+id	imdb_id	popularity	budget	revenue	original_title	cast	director	genres	production_companies	vote_count	vote_average	release_year	budget_adj	revenue_adj	profit
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	Action|Adventure|Science Fiction|Thriller	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	Action|Adventure|Science Fiction|Thriller	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	Robert Schwentke	Adventure|Science Fiction|Thriller	Summit Entertainment|Mandeville Films|Red Wago...	2480	6.3	2015	1.012000e+08	2.716190e+08	185238201
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	Action|Adventure|Science Fiction|Fantasy	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	James Wan	Action|Crime|Thriller	Universal Pictures|Original Film|Media Rights ...	2947	7.3	2015	1.747999e+08	1.385749e+09	1316249360
+df['genres']= df['genres'].str.split('|')
+df_genre=df.explode('genres')
+df_genre
+id	imdb_id	popularity	budget	revenue	original_title	cast	director	genres	production_companies	vote_count	vote_average	release_year	budget_adj	revenue_adj	profit
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	Action	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	Adventure	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	Science Fiction	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	Thriller	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	Action	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	Adventure	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	Science Fiction	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	Thriller	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	Robert Schwentke	Adventure	Summit Entertainment|Mandeville Films|Red Wago...	2480	6.3	2015	1.012000e+08	2.716190e+08	185238201
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	Robert Schwentke	Science Fiction	Summit Entertainment|Mandeville Films|Red Wago...	2480	6.3	2015	1.012000e+08	2.716190e+08	185238201
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	Robert Schwentke	Thriller	Summit Entertainment|Mandeville Films|Red Wago...	2480	6.3	2015	1.012000e+08	2.716190e+08	185238201
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	Action	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	Adventure	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	Science Fiction	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	Fantasy	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	James Wan	Action	Universal Pictures|Original Film|Media Rights ...	2947	7.3	2015	1.747999e+08	1.385749e+09	1316249360
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	James Wan	Crime	Universal Pictures|Original Film|Media Rights ...	2947	7.3	2015	1.747999e+08	1.385749e+09	1316249360
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	James Wan	Thriller	Universal Pictures|Original Film|Media Rights ...	2947	7.3	2015	1.747999e+08	1.385749e+09	1316249360
+5	281957	tt1663202	9.110700	135000000	532950503	The Revenant	Leonardo DiCaprio|Tom Hardy|Will Poulter|Domhn...	Alejandro GonzÃ¡lez IÃ±Ã¡rritu	Western	Regency Enterprises|Appian Way|CatchPlay|Anony...	3929	7.2	2015	1.241999e+08	4.903142e+08	397950503
+5	281957	tt1663202	9.110700	135000000	532950503	The Revenant	Leonardo DiCaprio|Tom Hardy|Will Poulter|Domhn...	Alejandro GonzÃ¡lez IÃ±Ã¡rritu	Drama	Regency Enterprises|Appian Way|CatchPlay|Anony...	3929	7.2	2015	1.241999e+08	4.903142e+08	397950503
+5	281957	tt1663202	9.110700	135000000	532950503	The Revenant	Leonardo DiCaprio|Tom Hardy|Will Poulter|Domhn...	Alejandro GonzÃ¡lez IÃ±Ã¡rritu	Adventure	Regency Enterprises|Appian Way|CatchPlay|Anony...	3929	7.2	2015	1.241999e+08	4.903142e+08	397950503
+5	281957	tt1663202	9.110700	135000000	532950503	The Revenant	Leonardo DiCaprio|Tom Hardy|Will Poulter|Domhn...	Alejandro GonzÃ¡lez IÃ±Ã¡rritu	Thriller	Regency Enterprises|Appian Way|CatchPlay|Anony...	3929	7.2	2015	1.241999e+08	4.903142e+08	397950503
+6	87101	tt1340138	8.654359	155000000	440603537	Terminator Genisys	Arnold Schwarzenegger|Jason Clarke|Emilia Clar...	Alan Taylor	Science Fiction	Paramount Pictures|Skydance Productions	2598	5.8	2015	1.425999e+08	4.053551e+08	285603537
+6	87101	tt1340138	8.654359	155000000	440603537	Terminator Genisys	Arnold Schwarzenegger|Jason Clarke|Emilia Clar...	Alan Taylor	Action	Paramount Pictures|Skydance Productions	2598	5.8	2015	1.425999e+08	4.053551e+08	285603537
+6	87101	tt1340138	8.654359	155000000	440603537	Terminator Genisys	Arnold Schwarzenegger|Jason Clarke|Emilia Clar...	Alan Taylor	Thriller	Paramount Pictures|Skydance Productions	2598	5.8	2015	1.425999e+08	4.053551e+08	285603537
+6	87101	tt1340138	8.654359	155000000	440603537	Terminator Genisys	Arnold Schwarzenegger|Jason Clarke|Emilia Clar...	Alan Taylor	Adventure	Paramount Pictures|Skydance Productions	2598	5.8	2015	1.425999e+08	4.053551e+08	285603537
+7	286217	tt3659388	7.667400	108000000	595380321	The Martian	Matt Damon|Jessica Chastain|Kristen Wiig|Jeff ...	Ridley Scott	Drama	Twentieth Century Fox Film Corporation|Scott F...	4572	7.6	2015	9.935996e+07	5.477497e+08	487380321
+7	286217	tt3659388	7.667400	108000000	595380321	The Martian	Matt Damon|Jessica Chastain|Kristen Wiig|Jeff ...	Ridley Scott	Adventure	Twentieth Century Fox Film Corporation|Scott F...	4572	7.6	2015	9.935996e+07	5.477497e+08	487380321
+7	286217	tt3659388	7.667400	108000000	595380321	The Martian	Matt Damon|Jessica Chastain|Kristen Wiig|Jeff ...	Ridley Scott	Science Fiction	Twentieth Century Fox Film Corporation|Scott F...	4572	7.6	2015	9.935996e+07	5.477497e+08	487380321
+8	211672	tt2293640	7.404165	74000000	1156730962	Minions	Sandra Bullock|Jon Hamm|Michael Keaton|Allison...	Kyle Balda|Pierre Coffin	Family	Universal Pictures|Illumination Entertainment	2893	6.5	2015	6.807997e+07	1.064192e+09	1082730962
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+10851	15347	tt0060182	0.342791	0	0	Born Free	Virginia McKenna|Bill Travers|Geoffrey Keen|Pe...	James Hill	Foreign	High Road	15	6.6	1966	0.000000e+00	0.000000e+00	0
+10852	37301	tt0060165	0.227220	0	0	A Big Hand for the Little Lady	Henry Fonda|Joanne Woodward|Jason Robards|Paul...	Fielder Cook	Western	Eden Productions Inc.	11	6.0	1966	0.000000e+00	0.000000e+00	0
+10854	31602	tt0060232	0.146402	0	0	The Chase	Marlon Brando|Jane Fonda|Robert Redford|E.G. M...	Arthur Penn	Thriller	Horizon Pictures|Columbia Pictures Corporation	17	6.0	1966	0.000000e+00	0.000000e+00	0
+10854	31602	tt0060232	0.146402	0	0	The Chase	Marlon Brando|Jane Fonda|Robert Redford|E.G. M...	Arthur Penn	Drama	Horizon Pictures|Columbia Pictures Corporation	17	6.0	1966	0.000000e+00	0.000000e+00	0
+10854	31602	tt0060232	0.146402	0	0	The Chase	Marlon Brando|Jane Fonda|Robert Redford|E.G. M...	Arthur Penn	Crime	Horizon Pictures|Columbia Pictures Corporation	17	6.0	1966	0.000000e+00	0.000000e+00	0
+10855	13343	tt0059221	0.141026	700000	0	The Ghost & Mr. Chicken	Don Knotts|Joan Staley|Liam Redmond|Dick Sarge...	Alan Rafkin	Comedy	Universal Pictures	14	6.1	1966	4.702610e+06	0.000000e+00	-700000
+10855	13343	tt0059221	0.141026	700000	0	The Ghost & Mr. Chicken	Don Knotts|Joan Staley|Liam Redmond|Dick Sarge...	Alan Rafkin	Family	Universal Pictures	14	6.1	1966	4.702610e+06	0.000000e+00	-700000
+10855	13343	tt0059221	0.141026	700000	0	The Ghost & Mr. Chicken	Don Knotts|Joan Staley|Liam Redmond|Dick Sarge...	Alan Rafkin	Mystery	Universal Pictures	14	6.1	1966	4.702610e+06	0.000000e+00	-700000
+10855	13343	tt0059221	0.141026	700000	0	The Ghost & Mr. Chicken	Don Knotts|Joan Staley|Liam Redmond|Dick Sarge...	Alan Rafkin	Romance	Universal Pictures	14	6.1	1966	4.702610e+06	0.000000e+00	-700000
+10856	20277	tt0061135	0.140934	0	0	The Ugly Dachshund	Dean Jones|Suzanne Pleshette|Charles Ruggles|K...	Norman Tokar	Comedy	Walt Disney Pictures	14	5.7	1966	0.000000e+00	0.000000e+00	0
+10856	20277	tt0061135	0.140934	0	0	The Ugly Dachshund	Dean Jones|Suzanne Pleshette|Charles Ruggles|K...	Norman Tokar	Drama	Walt Disney Pictures	14	5.7	1966	0.000000e+00	0.000000e+00	0
+10856	20277	tt0061135	0.140934	0	0	The Ugly Dachshund	Dean Jones|Suzanne Pleshette|Charles Ruggles|K...	Norman Tokar	Family	Walt Disney Pictures	14	5.7	1966	0.000000e+00	0.000000e+00	0
+10857	5921	tt0060748	0.131378	0	0	Nevada Smith	Steve McQueen|Karl Malden|Brian Keith|Arthur K...	Henry Hathaway	Action	Paramount Pictures|Solar Productions|Embassy P...	10	5.9	1966	0.000000e+00	0.000000e+00	0
+10857	5921	tt0060748	0.131378	0	0	Nevada Smith	Steve McQueen|Karl Malden|Brian Keith|Arthur K...	Henry Hathaway	Western	Paramount Pictures|Solar Productions|Embassy P...	10	5.9	1966	0.000000e+00	0.000000e+00	0
+10858	31918	tt0060921	0.317824	0	0	The Russians Are Coming, The Russians Are Coming	Carl Reiner|Eva Marie Saint|Alan Arkin|Brian K...	Norman Jewison	Comedy	The Mirisch Corporation	11	5.5	1966	0.000000e+00	0.000000e+00	0
+10858	31918	tt0060921	0.317824	0	0	The Russians Are Coming, The Russians Are Coming	Carl Reiner|Eva Marie Saint|Alan Arkin|Brian K...	Norman Jewison	War	The Mirisch Corporation	11	5.5	1966	0.000000e+00	0.000000e+00	0
+10859	20620	tt0060955	0.089072	0	0	Seconds	Rock Hudson|Salome Jens|John Randolph|Will Gee...	John Frankenheimer	Mystery	Gibraltar Productions|Joel Productions|John Fr...	22	6.6	1966	0.000000e+00	0.000000e+00	0
+10859	20620	tt0060955	0.089072	0	0	Seconds	Rock Hudson|Salome Jens|John Randolph|Will Gee...	John Frankenheimer	Science Fiction	Gibraltar Productions|Joel Productions|John Fr...	22	6.6	1966	0.000000e+00	0.000000e+00	0
+10859	20620	tt0060955	0.089072	0	0	Seconds	Rock Hudson|Salome Jens|John Randolph|Will Gee...	John Frankenheimer	Thriller	Gibraltar Productions|Joel Productions|John Fr...	22	6.6	1966	0.000000e+00	0.000000e+00	0
+10859	20620	tt0060955	0.089072	0	0	Seconds	Rock Hudson|Salome Jens|John Randolph|Will Gee...	John Frankenheimer	Drama	Gibraltar Productions|Joel Productions|John Fr...	22	6.6	1966	0.000000e+00	0.000000e+00	0
+10860	5060	tt0060214	0.087034	0	0	Carry On Screaming!	Kenneth Williams|Jim Dale|Harry H. Corbett|Joa...	Gerald Thomas	Comedy	Peter Rogers Productions|Anglo-Amalgamated Fil...	13	7.0	1966	0.000000e+00	0.000000e+00	0
+10861	21	tt0060371	0.080598	0	0	The Endless Summer	Michael Hynson|Robert August|Lord 'Tally Ho' B...	Bruce Brown	Documentary	Bruce Brown Films	11	7.4	1966	0.000000e+00	0.000000e+00	0
+10862	20379	tt0060472	0.065543	0	0	Grand Prix	James Garner|Eva Marie Saint|Yves Montand|Tosh...	John Frankenheimer	Action	Cherokee Productions|Joel Productions|Douglas ...	20	5.7	1966	0.000000e+00	0.000000e+00	0
+10862	20379	tt0060472	0.065543	0	0	Grand Prix	James Garner|Eva Marie Saint|Yves Montand|Tosh...	John Frankenheimer	Adventure	Cherokee Productions|Joel Productions|Douglas ...	20	5.7	1966	0.000000e+00	0.000000e+00	0
+10862	20379	tt0060472	0.065543	0	0	Grand Prix	James Garner|Eva Marie Saint|Yves Montand|Tosh...	John Frankenheimer	Drama	Cherokee Productions|Joel Productions|Douglas ...	20	5.7	1966	0.000000e+00	0.000000e+00	0
+10863	39768	tt0060161	0.065141	0	0	Beregis Avtomobilya	Innokentiy Smoktunovskiy|Oleg Efremov|Georgi Z...	Eldar Ryazanov	Mystery	Mosfilm	11	6.5	1966	0.000000e+00	0.000000e+00	0
+10863	39768	tt0060161	0.065141	0	0	Beregis Avtomobilya	Innokentiy Smoktunovskiy|Oleg Efremov|Georgi Z...	Eldar Ryazanov	Comedy	Mosfilm	11	6.5	1966	0.000000e+00	0.000000e+00	0
+10864	21449	tt0061177	0.064317	0	0	What's Up, Tiger Lily?	Tatsuya Mihashi|Akiko Wakabayashi|Mie Hama|Joh...	Woody Allen	Action	Benedict Pictures Corp.	22	5.4	1966	0.000000e+00	0.000000e+00	0
+10864	21449	tt0061177	0.064317	0	0	What's Up, Tiger Lily?	Tatsuya Mihashi|Akiko Wakabayashi|Mie Hama|Joh...	Woody Allen	Comedy	Benedict Pictures Corp.	22	5.4	1966	0.000000e+00	0.000000e+00	0
+10865	22293	tt0060666	0.035919	19000	0	Manos: The Hands of Fate	Harold P. Warren|Tom Neyman|John Reynolds|Dian...	Harold P. Warren	Horror	Norm-Iris	15	1.5	1966	1.276423e+05	0.000000e+00	-19000
+24643 rows × 16 columns
+
+df_genre.shape
+(24643, 16)
+#dropping movies with budget and revenue equals to zero
+dr = df[(df['budget']==0) & (df['revenue']==0)]
+df = df.drop(index=dr.index)
+#droping movies that have budget and zero revenue
+dr2 = df[(df['budget']!=0) & (df['revenue']==0)]
+df = df.drop(index=dr2.index)
+#droping movies that have revenue and zero budget
+dr3 = df[(df['budget']==0) & (df['revenue']!=0)]
+df = df.drop(index=dr3.index)
+df.info()
+#The columns dropped to not get a misleading value like a negative profit when calcualting the profit in the analysis since profit will be calculated as revenue-budget
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 3805 entries, 0 to 10848
+Data columns (total 16 columns):
+id                      3805 non-null int64
+imdb_id                 3805 non-null object
+popularity              3805 non-null float64
+budget                  3805 non-null int64
+revenue                 3805 non-null int64
+original_title          3805 non-null object
+cast                    3805 non-null object
+director                3805 non-null object
+genres                  3805 non-null object
+production_companies    3805 non-null object
+vote_count              3805 non-null int64
+vote_average            3805 non-null float64
+release_year            3805 non-null int64
+budget_adj              3805 non-null float64
+revenue_adj             3805 non-null float64
+profit                  3805 non-null int64
+dtypes: float64(4), int64(6), object(6)
+memory usage: 505.4+ KB
+
+Exploratory Data Analysis
+In this part, we first further explore the data through different plots that shows the distribution of variables and descriptive statistics. Then start progressing in the analysis through the research questions.
+
+Question 1 (What are the hightest movies in terms of profit?)
+df.hist(figsize=(8,8))
+array([[<matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea373400>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea2d5ef0>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea326be0>],
+       [<matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea2c9710>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea280710>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00ea280748>],
+       [<matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9dcf860>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9d737f0>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9d997f0>],
+       [<matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9d4ba20>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9d00a20>,
+        <matplotlib.axes._subplots.AxesSubplot object at 0x7f00e9cb9a20>]],
+      dtype=object)
+
+These plots shows that almost all data are skewed to the right
+
+# Use this, and more code cells, to explore your data. Don't forget to add
+#   Markdown cells to document your observations and findings.
+df['profit']=df['revenue'] - df['budget']
+df.head()
+id	imdb_id	popularity	budget	revenue	original_title	cast	director	genres	production_companies	vote_count	vote_average	release_year	budget_adj	revenue_adj	profit
+0	135397	tt0369610	32.985763	150000000	1513528810	Jurassic World	Chris Pratt|Bryce Dallas Howard|Irrfan Khan|Vi...	Colin Trevorrow	[Action, Adventure, Science Fiction, Thriller]	Universal Studios|Amblin Entertainment|Legenda...	5562	6.5	2015	1.379999e+08	1.392446e+09	1363528810
+1	76341	tt1392190	28.419936	150000000	378436354	Mad Max: Fury Road	Tom Hardy|Charlize Theron|Hugh Keays-Byrne|Nic...	George Miller	[Action, Adventure, Science Fiction, Thriller]	Village Roadshow Pictures|Kennedy Miller Produ...	6185	7.1	2015	1.379999e+08	3.481613e+08	228436354
+2	262500	tt2908446	13.112507	110000000	295238201	Insurgent	Shailene Woodley|Theo James|Kate Winslet|Ansel...	Robert Schwentke	[Adventure, Science Fiction, Thriller]	Summit Entertainment|Mandeville Films|Red Wago...	2480	6.3	2015	1.012000e+08	2.716190e+08	185238201
+3	140607	tt2488496	11.173104	200000000	2068178225	Star Wars: The Force Awakens	Harrison Ford|Mark Hamill|Carrie Fisher|Adam D...	J.J. Abrams	[Action, Adventure, Science Fiction, Fantasy]	Lucasfilm|Truenorth Productions|Bad Robot	5292	7.5	2015	1.839999e+08	1.902723e+09	1868178225
+4	168259	tt2820852	9.335014	190000000	1506249360	Furious 7	Vin Diesel|Paul Walker|Jason Statham|Michelle ...	James Wan	[Action, Crime, Thriller]	Universal Pictures|Original Film|Media Rights ...	2947	7.3	2015	1.747999e+08	1.385749e+09	1316249360
+This shows that Avatar gained the most profit from all movies
+
+count_genre=df_genre['genres'].value_counts()
+count_genre.plot(kind='pie',figsize=(8,8),autopct='%1.f%%')
+<matplotlib.axes._subplots.AxesSubplot at 0x7f00e9a48278>
+
+This shows that the Drama genre is highest genre produced
+
+df.plot.scatter(x='vote_average',y='profit',title='Profit vs Vote Average',figsize=(8,8))
+<matplotlib.axes._subplots.AxesSubplot at 0x7f00e948db70>
+
+This shows that the relationship between profit and voting isn't linear meaning that it's not necessary that the highest profit got the higest vote average
+
+Question 2: Which Genre generated the highest profit?
+genre_profit= df_genre.groupby('genres').mean()
+genre_profit.sort_values(['profit'],ascending=False).profit
+genres
+Adventure          8.035860e+07
+Fantasy            6.957160e+07
+Animation          5.919843e+07
+Family             5.518814e+07
+Science Fiction    4.896584e+07
+Action             4.817262e+07
+War                2.811237e+07
+Comedy             2.678348e+07
+Thriller           2.601405e+07
+Crime              2.581212e+07
+Romance            2.526339e+07
+Mystery            2.523638e+07
+Music              2.309964e+07
+Drama              1.894777e+07
+History            1.485333e+07
+Horror             1.138552e+07
+Western            9.894433e+06
+Documentary        2.318398e+06
+TV Movie          -2.045455e+04
+Foreign           -5.069747e+05
+Name: profit, dtype: float64
+This shows that Adventure generates the highest average profit eventhough the Drama genre was the highest one produced
+
+Question 3 (Which movies got the highest popularity among the top 10 grossing movies?)
+df_top10 = df.nlargest(10, 'profit')
+df_top10.plot(kind='bar',title='Profit vs Movie Names',alpha=.2,x='original_title',y='profit')
+plt.xlabel('original_title')
+plt.ylabel('profit')
+#This shows the top 10 movies with the highest profit
+Text(0,0.5,'profit')
+
+This graph showed the top highest grossing movies and that Avater grossed the highest profit
+
+df_top10.plot.bar(title='Profit vs Years',x='release_year',y='profit',figsize=(8,8))
+<matplotlib.axes._subplots.AxesSubplot at 0x7f00e9583208>
+
+This graph shows that although the higest profit was in 2009, but nearly half of the top 10 highest grossing movies were produced in 2015
+
+df_top10.plot(kind='barh', title='Movies vs Popularity', x='original_title',y='popularity')
+<matplotlib.axes._subplots.AxesSubplot at 0x7f00e96752e8>
+
+This shows that despite Avater having the highest profit, it doesn't have the highest popularity
+
+
+Conclusions
+The analysis showed that: .Avatar grossed the highest profit. .Also, when checking the popularity, although Avatar grossed the highest profit, it didn't have the highest popularity among people, where Jurassic World was the most popular among the top 10 profitable movies .Also, among the top 10 movies, 4 of them were produced in 2015. .Although drama was the highest genre produced, Adventure was the highest genre that generated profit. .Another important finding was that the relation between profit and vote average wasn't linear meaning that it doesn't always mean that high profit will equal high vote average.
+
+Limitations
+One limitation that needs to be further investigated is the reason why drama was produced more although the adventure genre generated more profit. Also, the correlation between profit and vote average needs to be further investigated to explain how a high grossing movie doesn't recieve the highest votes. Another important limitation was the reason of why around 45% of the top 10 movies in terms of profit were produced in 2015, was it due to the injection of high budgets to give movies a better chance of grossing more revenues or for another reason. One last limitation was the fact that Avatar recieved the highest profit but wasn't the most popular movie and there's no extra data to further investigate this point.
+
+from subprocess import call
+call(['python', '-m', 'nbconvert', 'Investigate_a_Dataset.ipynb'])
+0
